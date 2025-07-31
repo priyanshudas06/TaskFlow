@@ -1,39 +1,50 @@
 from fastapi import APIRouter,Depends,HTTPException
-from typing import List
-from _uuid import uuid4
+from uuid import uuid4
 from models.task import TaskCreate
+from database.mongo import task_collection
+from typing import List
+from routes.authentication import get_current_user
 
 router = APIRouter()
 
-temp_tasks_db = {}
+@router.post("/createTask", response_model=TaskCreate)
+async def create_task(task: TaskCreate, user: dict = Depends(get_current_user)):
+    task_dict = task.dict()
+    task_dict["task_id"] = str(uuid4())
+    task_dict["user_id"] = user["sub"]
 
-@router.post("/", response_model = TaskCreate)
-async def create_task(task: TaskCreate):
-    task_id = str(uuid4())
-    temp_tasks_db[task_id] = task
-    return { "task_id": task_id, "task": task}
+    result = await task_collection.insert_one(task_dict)
 
-@router.get("/", response_model= List[dict])
-async def get_tasks():
-    return [{"task_id": taskID, "task": task} for taskID, task in temp_tasks_db.items()]
+    if result.inserted_id:
+        return task_dict
+    raise HTTPException(status_code=500, detail="Task creation failed")
 
-@router.get("/{task_id}",response_model = dict)
-async def get_task(task_id: str):
-    task = temp_tasks_db.get(task_id)
+@router.get("/allTasks", response_model=List[TaskCreate])
+async def get_tasks(user : dict = Depends(get_current_user)):
+    tasks_cursor = task_collection.find({"user_id": user["id"]})
+    tasks = []
+    async for task in tasks_cursor:
+        tasks.append(TaskCreate(**task))
+    return tasks
+
+@router.get("/{task_id}",response_model = TaskCreate)
+async def get_task(task_id: str, user: dict = Depends(get_current_user)):
+    task = await task_collection.find_one({"task_id": task_id, "user_id": user["id"]})
     if not task:
-        raise HTTPException(status_code=404, detail = "taslk not found")
-    return {"task_if" : task_id, "task" : task}
+        raise HTTPException(status_code = 404, detail = "task not found")
+    return TaskCreate(**task)
+  
 
-@router.put("/{task_id}", response_model= dict)
-async def update_task(task_id: str, task: TaskCreate):
-    if task_id not in temp_tasks_db:
-        raise HTTPException(status_code = 404, detail ="task not found" )
-    temp_tasks_db[task_id] = task
-    return {"task_id": task_id, "task": task}
+@router.put("/{task_id}", response_model= TaskCreate)
+async def update_task(task_id: str, updated_task: TaskCreate, user: dict = Depends(get_current_user)):
+    task = await task_collection.replace_one({"id": task_id, "user_id": user["id"]}, {**updated_task.dict(), "task_id": task_id, "user_id": user["id"]})
+    if task.modified_count == 0:
+        raise HTTPException(status_code = 404, detail = "Task not found or no changes made")
+    return updated_task
 
 @router.delete("/{task_id}")
-async def delete_task(task_id: str):
-    if task_id not in temp_tasks_db:
-        raise HTTPException(status_code = 404, detail = "task not found")
-    del temp_tasks_db[task_id]
-    return {"detail": "Task deleted successfully"}
+async def delete_task(task_id: str, user: dict = Depends(get_current_user)):
+    task = await task_collection.delete_one({"task_id": task_id, "user_id": user["id"]})
+    if task.deleted_count == 0:
+        raise HTTPException(status_code = 404, detail = "Task not found")
+    return {"message":"Task deleted successfully"}

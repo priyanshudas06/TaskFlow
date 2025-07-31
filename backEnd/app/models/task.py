@@ -1,8 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
 class TaskCreate(BaseModel):
+    id: str
     title: str
     decription: Optional[str] =""
     due_date: Optional[datetime] = None
@@ -11,7 +12,7 @@ class TaskCreate(BaseModel):
     board_id: str
     priority: Optional[str] = "medium"
     created_by: str
-    created_at: datetime = datetime.now()
+    created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
-    tags: Optional[List[str]] = []
+    tags: Optional[List[str]] = None
     is_completed: bool = False

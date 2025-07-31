@@ -5,7 +5,11 @@ import os
 load_dotenv()
 
 MONGO_URL = os.getenv("mongodb+srv://priyanshudas:<Leeza%231976>@cluster0.xauzpqm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-MONGGO_DB_NAME = os.getenv("taskManager")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+
+if not MONGO_DB_NAME:
+	raise ValueError("Environment variable 'taskManager' for database name is not set.")
 
 client = AsyncIOMotorClient(MONGO_URL)
-db = client[MONGGO_DB_NAME] # type: ignore
+db = client[MONGO_DB_NAME]
+task_collection = db["tasks"]
