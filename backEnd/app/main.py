@@ -1,7 +1,8 @@
-from fastapi import FastAPI
 
+from fastapi import FastAPI
+from routes import authentication as auth
+from routes import tasks
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+app.include_router(auth.router, prefix = "/auth") # type: ignore
+app.include_router(tasks.router, prefix = "/tasks") # type: ignore
