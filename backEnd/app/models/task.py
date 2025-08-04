@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 class TaskCreate(BaseModel):
-    id: str
+    # id: Optional[str] = None
     title: str
     decription: Optional[str] =""
     due_date: Optional[datetime] = None
@@ -16,3 +16,7 @@ class TaskCreate(BaseModel):
     updated_at: Optional[datetime] = None
     tags: Optional[List[str]] = None
     is_completed: bool = False
+
+class TaskOut(TaskCreate):
+    task_id: str
+    user_id: str

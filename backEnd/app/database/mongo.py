@@ -13,3 +13,4 @@ if not MONGO_DB_NAME:
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[MONGO_DB_NAME]
 task_collection = db["tasks"]
+user_collection = db["users"]
