@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
+from .task import TaskOut
 
 class UserCreate(BaseModel):
     username: str
@@ -19,4 +20,10 @@ class UserResponse(BaseModel):
     username: str
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
+
+class UserProfileWithTasks(UserResponse):
+    tasks: List[TaskOut] = []
+
+class RefreshTokenResponse(BaseModel):
+    refresh_token: str  

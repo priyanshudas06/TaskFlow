@@ -1,11 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
+from .comments import CommentCreate
 
 class TaskCreate(BaseModel):
     # id: Optional[str] = None
     title: str
-    decription: Optional[str] =""
+    description: Optional[str] =""
     due_date: Optional[datetime] = None
     assigned_to: Optional[str] = None
     status: str = "pending"
@@ -16,6 +17,7 @@ class TaskCreate(BaseModel):
     updated_at: Optional[datetime] = None
     tags: Optional[List[str]] = None
     is_completed: bool = False
+    comments: Optional[List[CommentCreate]] = None
 
 class TaskOut(TaskCreate):
     task_id: str
